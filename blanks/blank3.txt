@@ -1,0 +1,2 @@
+top left : 100, 520
+bottom right : 600, 830
