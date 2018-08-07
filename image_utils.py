@@ -5,13 +5,16 @@ import os
 
 from blank import Blank
 
+
 def jpg_to_numpy(directory_path, gray=True, delete=False):
     
-    if directory_path[-1] != '/':
-        directory_path += '/'
+    path_slash = '\\' if os.name == 'nt' else '/'
+
+    if directory_path[-1] != path_slash:
+        directory_path += path_slash
         
-    for img_path in glob.glob(directory_path + '/' + '*.jpg'):
-        
+    for img_path in glob.glob(directory_path + '*.jpg'):
+                
         img = cv.imread(img_path)
         
         if gray:
@@ -27,44 +30,30 @@ def adaptive_thresh(img, block_size=45, constant=10):
     return cv.adaptiveThreshold(img, 255,cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, block_size, constant) 
 
 
-def parse_blank_fields(filename):
+def cut_and_save(img_path, save_path, top_left, bot_right, gray=True):
     
-    fields = {}
+    """ 
+    img file should be kept in current directory. saved file will be saved there as well.
+    """
     
-    with open(filename) as f:
-        for line in f:
-            line = line.split(':')
-            
-            field_name = line[0].strip()
-            
-            coordinates = line[1].split(',')
-            row = int(coordinates[0].strip())
-            col = int(coordinates[1].strip())
-            
-            fields[field_name] = row,col
+    img = cv.imread(img_path)
+        
+    if gray:
+        img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        
+    min_row, max_row , min_col, max_col = get_min_max_coords(top_left, bot_right)
     
-    return fields['top_left'], fields['bot_right']
+    np.save(save_path, img[min_row:max_row, min_col:max_col])
+    
 
-
-def get_blanks(directory_path):
+def get_min_max_coords(top_left, bot_right):
+    """ this function returns the min and max values
+        for the row and column given the top left and bottom right corner coordinates. 
+        
+    """           
+    min_row = top_left[0]
+    max_row = bot_right[0]
+    min_col = top_left[1]
+    max_col = bot_right[1]
     
-    if directory_path[-1] != '/':
-        directory_path += '/'
-        
-    blank_names = set()
-    
-    for file_name in glob.glob(directory_path + '/*'):
-        cur_blank_name = file_name.split('/')[1]
-        cur_blank_name = cur_blank_name.split('.')[0]
-        
-        blank_names.add(cur_blank_name)
-        
-    blanks = []
-    
-    for blank in blank_names:
-        img = np.load(directory_path + '/' + blank + '.npy')
-        top_left, bot_right = parse_blank_fields(directory_path + '/' + blank + '.txt')
-        
-        blanks.append(Blank(img, top_left, bot_right))
-        
-    return blanks
+    return min_row, max_row, min_col, max_col
