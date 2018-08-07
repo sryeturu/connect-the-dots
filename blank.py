@@ -33,8 +33,7 @@ def get_blanks(directory_path):
     blank_names = set()
     
     for file_name in glob.glob(directory_path + '*'):
-                
-        cur_blank_name = file_name.split(path_slash)[1]
+        cur_blank_name = file_name.split(path_slash)[-1]
         cur_blank_name = cur_blank_name.split('.')[0]
         
         blank_names.add(cur_blank_name)

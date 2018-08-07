@@ -3,9 +3,6 @@ import numpy as np
 import cv2 as cv
 import os
 
-from blank import Blank
-
-
 def jpg_to_numpy(directory_path, gray=True, delete=False):
     
     path_slash = '\\' if os.name == 'nt' else '/'
@@ -13,8 +10,7 @@ def jpg_to_numpy(directory_path, gray=True, delete=False):
     if directory_path[-1] != path_slash:
         directory_path += path_slash
         
-    for img_path in glob.glob(directory_path + '*.jpg'):
-                
+    for img_path in glob.glob(directory_path + '*.jpg'):              
         img = cv.imread(img_path)
         
         if gray:
