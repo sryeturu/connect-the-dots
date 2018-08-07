@@ -1,2 +1,2 @@
-top left : 70, 570
-bottom right : 620, 880
+top_left : 70, 570
+bot_right : 620, 880
