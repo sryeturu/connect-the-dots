@@ -2,7 +2,6 @@ import numpy as np
 import glob
 import os
 
-from image_utils import get_min_max_coords
 
 def parse_blank_fields(filename):
     
@@ -58,7 +57,7 @@ class Blank:
         self.top_left = top_left
         self.bot_right = bot_right        
         
-        self.min_row, self.max_row, self.min_col, self.max_col = get_min_max_coords(top_left, bot_right)
+        self.min_row, self.max_row, self.min_col, self.max_col = top_left[0], bot_right[0], top_left[1], bot_right[1]
 
         self.can_place = np.zeros(shape=img.shape)
         
@@ -71,7 +70,7 @@ class Blank:
             obj : numpy array
                     image object to be drawn on top of blank
             
-            top_left_coords : tuple (row, col)
+            top_left_obj : tuple (row, col)
                     the row and column of where the top left corner of the image should be placed
             
             Returns
@@ -91,7 +90,7 @@ class Blank:
         if bot_right_obj[1] > self.bot_right[1]:
             return False
        
-        min_row, max_row , min_col, max_col = get_min_max_coords(top_left_obj, bot_right_obj)
+        min_row, max_row, min_col, max_col = top_left_obj[0], bot_right_obj[0], top_left_obj[1], bot_right_obj[1]   
         
         if np.max(self.can_place[min_row:max_row, min_col:max_col]) == 1:
             return False
