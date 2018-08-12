@@ -2,50 +2,37 @@ import numpy as np
 import glob
 import os
 
-
-def parse_blank_fields(filename):
-    
-    fields = {}
-    
-    with open(filename) as f:
-        for line in f:
-            line = line.split(':')
-            
-            field_name = line[0].strip()
-            
-            coordinates = line[1].split(',')
-            row = int(coordinates[0].strip())
-            col = int(coordinates[1].strip())
-            
-            fields[field_name] = row,col
-    
-    return fields['top_left'], fields['bot_right']
-
+from config_utils import parse_cfg
 
 def get_blanks(directory_path):
     
     path_slash = '\\' if os.name == 'nt' else '/'
-    
+        
     if directory_path[-1] != path_slash:
         directory_path += path_slash
         
     blank_names = set()
     
-    for file_name in glob.glob(directory_path + '*'):
+    for file_name in glob.glob(directory_path + '*.npy'):
         cur_blank_name = file_name.split(path_slash)[-1]
         cur_blank_name = cur_blank_name.split('.')[0]
         
         blank_names.add(cur_blank_name)
         
+    cfg_file = glob.glob(directory_path + '*.cfg')[0]
+    cfg =  parse_cfg(cfg_file)
+
     blanks = []
-    
+
     for blank in blank_names:
         img = np.load(directory_path + blank + '.npy')
-        top_left, bot_right = parse_blank_fields(directory_path + blank + '.txt')
+        top_left = [int(x) for x in cfg[blank]['top_left']]
+        bot_right = [int(x) for x in cfg[blank]['bot_right']]
+
         
         blanks.append(Blank(img, top_left, bot_right))
         
-    return blanks    
+    return blanks   
 
 
 class Blank:

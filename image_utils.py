@@ -3,6 +3,9 @@ import numpy as np
 import cv2 as cv
 import os
 
+from config_utils import parse_cfg
+
+
 def jpg_to_numpy(directory_path, gray=True, delete=False):
     
     path_slash = '\\' if os.name == 'nt' else '/'
@@ -41,3 +44,34 @@ def cut_and_save(img_path, save_path, top_left, bot_right, gray=True):
     
     np.save(save_path, img[min_row:max_row, min_col:max_col])
     
+    
+def get_img_data(directory_path):
+    
+    path_slash = '\\' if os.name == 'nt' else '/'
+    
+    if directory_path[-1] != path_slash:
+        directory_path += path_slash
+        
+    img_names = []
+    imgs = []
+    
+    for file_name in glob.glob(directory_path + '*'):
+        
+        if '.cfg' in file_name:
+            cfg = parse_cfg(file_name)
+            cfg = {k.replace('.npy', '') : float(v) for k,v in cfg.items()} # removing potential .npy extension from key(name) and casting p(x) from string to float
+        else:
+            cur_img = np.load(file_name)
+            imgs.append(cur_img)
+            
+            cur_img_name = file_name.split(path_slash)[-1]
+            cur_img_name = cur_img_name.split('.')[0]         
+            img_names.append(cur_img_name)
+            
+    
+    distribution = []
+    
+    for img_name in img_names:
+        distribution.append(cfg[img_name])
+    
+    return img_names, imgs, distribution

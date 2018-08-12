@@ -1,2 +1,0 @@
-top_left : 80, 450
-bot_right : 530, 860
