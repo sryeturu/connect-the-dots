@@ -6,6 +6,7 @@ from config_utils import parse_cfg
 
 def get_blanks(directory_path):
     
+    # clean after using numbers to name images
     path_slash = '\\' if os.name == 'nt' else '/'
         
     if directory_path[-1] != path_slash:

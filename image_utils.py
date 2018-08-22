@@ -66,3 +66,12 @@ def get_img_data(directory_path):
             
  
     return img_names, imgs
+
+
+def get_number_of_images(directory_path):
+    path_slash = '\\' if os.name == 'nt' else '/'
+
+    if directory_path[-1] != path_slash:
+        directory_path += path_slash
+    
+    return len(glob.glob(directory_path + '*.npy'))
