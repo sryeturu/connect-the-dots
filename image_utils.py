@@ -56,22 +56,13 @@ def get_img_data(directory_path):
     imgs = []
     
     for file_name in glob.glob(directory_path + '*'):
-        
-        if '.cfg' in file_name:
-            cfg = parse_cfg(file_name)
-            cfg = {k.replace('.npy', '') : float(v) for k,v in cfg.items()} # removing potential .npy extension from key(name) and casting p(x) from string to float
-        else:
-            cur_img = np.load(file_name)
-            imgs.append(cur_img)
+
+        cur_img = np.load(file_name)
+        imgs.append(cur_img)
+
+        cur_img_name = file_name.split(path_slash)[-1]
+        cur_img_name = cur_img_name.split('.')[0]         
+        img_names.append(cur_img_name)
             
-            cur_img_name = file_name.split(path_slash)[-1]
-            cur_img_name = cur_img_name.split('.')[0]         
-            img_names.append(cur_img_name)
-            
-    
-    distribution = []
-    
-    for img_name in img_names:
-        distribution.append(cfg[img_name])
-    
-    return img_names, imgs, distribution
+ 
+    return img_names, imgs
