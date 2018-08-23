@@ -25,7 +25,7 @@ def jpg_to_numpy(directory_path, gray=True, delete=False):
             os.remove(img_path)
             
 
-def adaptive_thresh(img, block_size=45, constant=10):
+def adaptive_thresh(img, block_size=55, constant=10):
     return cv.adaptiveThreshold(img, 255,cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, block_size, constant) 
 
 

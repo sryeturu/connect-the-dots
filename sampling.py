@@ -7,6 +7,10 @@ class Sampler:
         distribution is either a array like that sums to 1 with distribtion[2] representing the probability
         of sampling the 3rd image. Defaults to random if none. 
         '''
+        
+        if len(vals) == 0:
+            raise ValueError('must have > 0 values') 
+            
         self.vals = vals
         self.distribtion = distribtion 
     

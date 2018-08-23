@@ -36,6 +36,23 @@ def get_blanks(directory_path):
     return blanks   
 
 
+def write_to_cfg(blanks, append=True):
+    
+    mode = 'a' if append else 'w+'
+    
+    with open('blanks/blank.cfg', mode=mode) as f:
+        sorted_keys = sorted(blanks)
+        
+        for key in sorted_keys:
+            min_row, min_col = blanks[key][0]
+            max_row, max_col = blanks[key][1]
+       
+            f.writelines('\n[%d]' % key)
+            f.writelines('\ntop_left =  %d, %d' % (min_row, min_col))
+            f.writelines('\nbot_right =  %d, %d' % (max_row, max_col))
+            f.writelines('\n[end]\n')
+            
+            
 class Blank:
     
     def __init__(self, img, top_left, bot_right):
