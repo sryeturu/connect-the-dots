@@ -15,7 +15,8 @@ class Capture:
         self.blanks = []
         self.nums = []
         self.dots = []
-        
+        self.backgrounds = []
+
         self.frame = None
         self.window_name = 'capture'
         self.freeze = 0
@@ -38,7 +39,7 @@ class Capture:
             cv.rectangle(self.frame, self.points[0], self.points[1], (0), 2)
             cv.imshow('capture', self.frame)
             
-            print("want to save this image? 'p'(no), 'b'(blank), 'n'(num), 'd'(dot)")
+            print("want to save this image? b(blank) n(num) d(dot) o(background) q(no)")
             key = cv.waitKey(0)
 
             if key == 98: # blank
@@ -52,9 +53,10 @@ class Capture:
             elif key == 100: # dot
                 self.dots.append(img)
                 print('saved dot')
-            else:
-                pass
-            
+            elif key == 111: # backgrounds
+                self.backgrounds.append(img)
+                print('saved other')
+                
             self.freeze = 0 # unfreeze if frozen
             self.points = [] # reset points
 
@@ -70,7 +72,12 @@ class Capture:
         for img in self.dots:
             np.save('dots/' + str(cur_dot_idx), img)  
             cur_dot_idx += 1
-            
+        
+        cur_background_idx = get_number_of_images('background/') + 1
+        for img in self.others:
+            np.save('background/' + str(cur_background_idx), img)  
+            cur_other_idx += 1
+        
         cur_blank_idx = get_number_of_images('blanks/') + 1
         blanks_to_config = {}
         for img, top_left, bot_right in self.blanks:

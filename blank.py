@@ -59,15 +59,35 @@ class Blank:
         
         self.img = img
         
+        # specify these are paper attributes
         self.top_left = top_left
         self.bot_right = bot_right        
         
         self.min_row, self.max_row, self.min_col, self.max_col = top_left[0], bot_right[0], top_left[1], bot_right[1]
 
-        self.can_place = np.zeros(shape=img.shape)
+        self.can_place = np.zeros_like(img)
+        self.can_place[np.where(img == 0)] = 1 # where it's already black(hand, page outline) we CANNOT draw on
         
-            
-    def place_object(self, obj, top_left_obj):
+    
+    def draw_on_background(self, obj, top_left_obj):
+        bot_right_obj = (top_left_obj[0]+obj.shape[0], top_left_obj[1]+obj.shape[1])
+        
+        for row in range(obj.shape[0]):        
+            if top_left_obj[0] + row >= self.img.shape[0]:
+                break
+                
+            for col in range(obj.shape[1]):
+                if top_left_obj[1] + col >= self.img.shape[1]:
+                    break
+                
+                if (self.min_row <= (top_left_obj[0] + row) <= self.max_row) and (self.min_col <= (top_left_obj[1] + col) <= self.max_col):
+                    continue
+                
+
+                self.img[top_left_obj[0] + row, top_left_obj[1] + col] = obj[row, col]
+        
+
+    def draw_on_paper(self, obj, top_left_obj):
         """ tries to place an object(image) on the current blank canvas
         
             Parameters
@@ -85,7 +105,8 @@ class Blank:
         """
         
         bot_right_obj = (top_left_obj[0]+obj.shape[0], top_left_obj[1]+obj.shape[1])
-        
+        min_row, max_row, min_col, max_col = top_left_obj[0], bot_right_obj[0], top_left_obj[1], bot_right_obj[1]   
+
         if top_left_obj[0] < self.top_left[0]:
             return False
         if top_left_obj[1] < self.top_left[1]:
@@ -95,8 +116,6 @@ class Blank:
         if bot_right_obj[1] > self.bot_right[1]:
             return False
        
-        min_row, max_row, min_col, max_col = top_left_obj[0], bot_right_obj[0], top_left_obj[1], bot_right_obj[1]   
-        
         if np.max(self.can_place[min_row:max_row, min_col:max_col]) == 1:
             return False
 
