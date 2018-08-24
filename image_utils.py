@@ -3,7 +3,7 @@ import numpy as np
 import cv2 as cv
 import os
 
-from config_utils import parse_cfg
+from config import parse_cfg
 
 
 def jpg_to_numpy(directory_path, gray=True, delete=False):

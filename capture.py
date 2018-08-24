@@ -3,7 +3,7 @@ import numpy as np
 from constants import NUM_DIRECTORIES
 
 from image_utils import adaptive_thresh, get_number_of_images
-from blank import write_to_cfg
+from canvas import write_to_cfg
 
 class Capture:
     
@@ -12,10 +12,11 @@ class Capture:
     def __init__(self):
         self.points = []
         
-        self.blanks = []
+        self.canvases = []
         self.nums = []
         self.dots = []
         self.backgrounds = []
+        self.drawings = []
 
         self.frame = None
         self.window_name = 'capture'
@@ -39,12 +40,12 @@ class Capture:
             cv.rectangle(self.frame, self.points[0], self.points[1], (0), 2)
             cv.imshow('capture', self.frame)
             
-            print("want to save this image? b(blank) n(num) d(dot) o(background) q(no)")
+            print("want to save this image? c(canvas) n(num) d(dot) b(background) r(drawing) esc(no)")
             key = cv.waitKey(0)
 
-            if key == 98: # blank
-                self.blanks.append((cur_frame, (min_row,min_col), (max_row,max_col)))
-                print('saved blank')
+            if key == 99: # canvas
+                self.canvases.append((cur_frame, (min_row,min_col), (max_row,max_col)))
+                print('saved blank')                
             elif key == 110: # number
                 print('ok, what number?')
                 num = int(input())
@@ -53,9 +54,12 @@ class Capture:
             elif key == 100: # dot
                 self.dots.append(img)
                 print('saved dot')
-            elif key == 111: # backgrounds
+            elif key == 98: # backgrounds
                 self.backgrounds.append(img)
-                print('saved other')
+                print('saved background')
+            elif key == 114: # drawings
+                self.drawings.append(img)
+                print('saved drawing')
                 
             self.freeze = 0 # unfreeze if frozen
             self.points = [] # reset points
@@ -63,6 +67,15 @@ class Capture:
             
     def save_captures(self):
         
+        cur_canvas_idx = get_number_of_images('canvases/') + 1
+        canvas_to_config = {}
+        for img, top_left, bot_right in self.canvases:
+            np.save('canvases/' + str(cur_canvas_idx), img)  
+            blanks_to_config[cur_blank_idx] = (top_left, bot_right)
+            cur_blank_idx += 1
+        
+        if len(blanks_to_config) > 0:
+            write_to_cfg(blanks_to_config)
         for img, num in self.nums:
             num_cnt = get_number_of_images('nums/' + NUM_DIRECTORIES[num])
             
@@ -73,20 +86,16 @@ class Capture:
             np.save('dots/' + str(cur_dot_idx), img)  
             cur_dot_idx += 1
         
-        cur_background_idx = get_number_of_images('background/') + 1
-        for img in self.others:
-            np.save('background/' + str(cur_background_idx), img)  
-            cur_other_idx += 1
+        cur_background_idx = get_number_of_images('backgrounds/') + 1
+        for img in self.backgrounds:
+            np.save('backgrounds/' + str(cur_background_idx), img)  
+            cur_background_idx += 1
+            
+        cur_drawing_idx = get_number_of_images('drawings/') + 1
+        for img in self.drawings:
+            np.save('drawings/' + str(cur_drawing_idx), img)  
+            cur_drawing_idx += 1
         
-        cur_blank_idx = get_number_of_images('blanks/') + 1
-        blanks_to_config = {}
-        for img, top_left, bot_right in self.blanks:
-            np.save('blanks/' + str(cur_blank_idx), img)  
-            blanks_to_config[cur_blank_idx] = (top_left, bot_right)
-            cur_blank_idx += 1
-        
-        if len(blanks_to_config) > 0:
-            write_to_cfg(blanks_to_config)
 
     def run(self):
 
@@ -103,8 +112,7 @@ class Capture:
 
             cv.imshow('capture', self.frame)
             cv.setMouseCallback('capture', self.mouse_callback)
-
-
+            
             key = cv.waitKey(15)
 
             if key == 27: # exit on ESC

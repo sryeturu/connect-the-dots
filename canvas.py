@@ -1,51 +1,44 @@
 import numpy as np
 import glob
 import os
+from image_utils import get_number_of_images
+from config import parse_cfg
 
-from config_utils import parse_cfg
-
-def get_blanks(directory_path):
+def get_canvases(directory_path):
     
-    # clean after using numbers to name images
     path_slash = '\\' if os.name == 'nt' else '/'
         
     if directory_path[-1] != path_slash:
         directory_path += path_slash
         
-    blank_names = set()
-    
-    for file_name in glob.glob(directory_path + '*.npy'):
-        cur_blank_name = file_name.split(path_slash)[-1]
-        cur_blank_name = cur_blank_name.split('.')[0]
-        
-        blank_names.add(cur_blank_name)
-        
     cfg_file = glob.glob(directory_path + '*.cfg')[0]
     cfg =  parse_cfg(cfg_file)
 
-    blanks = []
-
-    for blank in blank_names:
-        img = np.load(directory_path + blank + '.npy')
-        top_left = [int(x) for x in cfg[blank]['top_left']]
-        bot_right = [int(x) for x in cfg[blank]['bot_right']]
+    canvases = []
+    
+    num_of_canvases = get_number_of_images(directory_path)
+    for i in range(1, num_of_canvases+1):
+        i = str(i)
+        img = np.load(directory_path + i + '.npy')
+        top_left = [int(x) for x in cfg[i]['top_left']]
+        bot_right = [int(x) for x in cfg[i]['bot_right']]   
 
         
-        blanks.append(Blank(img, top_left, bot_right))
+        canvases.append(Canvas(img, top_left, bot_right))
         
-    return blanks   
+    return canvases   
 
 
-def write_to_cfg(blanks, append=True):
+def write_to_cfg(canvases, append=True):
     
     mode = 'a' if append else 'w+'
     
-    with open('blanks/blank.cfg', mode=mode) as f:
-        sorted_keys = sorted(blanks)
+    with open('canvases/canvas.cfg', mode=mode) as f:
+        sorted_keys = sorted(canvases)
         
         for key in sorted_keys:
-            min_row, min_col = blanks[key][0]
-            max_row, max_col = blanks[key][1]
+            min_row, min_col = canvases[key][0]
+            max_row, max_col = canvases[key][1]
        
             f.writelines('\n[%d]' % key)
             f.writelines('\ntop_left =  %d, %d' % (min_row, min_col))
@@ -53,7 +46,7 @@ def write_to_cfg(blanks, append=True):
             f.writelines('\n[end]\n')
             
             
-class Blank:
+class Canvas:
     
     def __init__(self, img, top_left, bot_right):
         
@@ -70,30 +63,28 @@ class Blank:
         
     
     def draw_on_background(self, obj, top_left_obj):
-        bot_right_obj = (top_left_obj[0]+obj.shape[0], top_left_obj[1]+obj.shape[1])
         
         for row in range(obj.shape[0]):        
             if top_left_obj[0] + row >= self.img.shape[0]:
                 break
                 
             for col in range(obj.shape[1]):
+
                 if top_left_obj[1] + col >= self.img.shape[1]:
                     break
                 
                 if (self.min_row <= (top_left_obj[0] + row) <= self.max_row) and (self.min_col <= (top_left_obj[1] + col) <= self.max_col):
                     continue
-                
 
                 self.img[top_left_obj[0] + row, top_left_obj[1] + col] = obj[row, col]
-        
 
     def draw_on_paper(self, obj, top_left_obj):
-        """ tries to place an object(image) on the current blank canvas
+        """ tries to place an object(image) on the canvas paper
         
             Parameters
             ----------
             obj : numpy array
-                    image object to be drawn on top of blank
+                    image object to be drawn on top of canvas paper
             
             top_left_obj : tuple (row, col)
                     the row and column of where the top left corner of the image should be placed
