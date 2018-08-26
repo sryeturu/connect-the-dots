@@ -76,6 +76,7 @@ class Canvas:
                 if (self.min_row <= (top_left_obj[0] + row) <= self.max_row) and (self.min_col <= (top_left_obj[1] + col) <= self.max_col):
                     continue
 
+
                 self.img[top_left_obj[0] + row, top_left_obj[1] + col] = obj[row, col]
 
     def draw_on_paper(self, obj, top_left_obj):

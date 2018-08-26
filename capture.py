@@ -71,11 +71,12 @@ class Capture:
         canvas_to_config = {}
         for img, top_left, bot_right in self.canvases:
             np.save('canvases/' + str(cur_canvas_idx), img)  
-            blanks_to_config[cur_blank_idx] = (top_left, bot_right)
-            cur_blank_idx += 1
+            canvas_to_config[cur_canvas_idx] = (top_left, bot_right)
+            cur_canvas_idx += 1
         
-        if len(blanks_to_config) > 0:
-            write_to_cfg(blanks_to_config)
+        if len(canvas_to_config) > 0:
+            write_to_cfg(canvas_to_config)
+            
         for img, num in self.nums:
             num_cnt = get_number_of_images('nums/' + NUM_DIRECTORIES[num])
             
