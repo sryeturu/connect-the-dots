@@ -107,12 +107,34 @@ class Canvas:
             return False
         if bot_right_obj[1] > self.bot_right[1]:
             return False
-       
-        if np.max(self.can_place[min_row:max_row, min_col:max_col]) == 1:
-            return False
+        
+        
+        overlay = np.copy(obj)
+        
+        
+        if np.alltrue(self.img[min_row:max_row, min_col:max_col] == 255):
+            self.img[min_row:max_row, min_col:max_col] = overlay
+            return True
 
-        self.can_place[min_row:max_row, min_col:max_col]  = 1
-        self.img[min_row:max_row, min_col:max_col] = obj
+        
+        for row in range(obj.shape[0]):
+            for col in range(obj.shape[1]):
+                canvas_pixle = self.img[top_left_obj[0]+row, top_left_obj[1]+col]
+                obj_pixle = obj[row, col]
+                
+                if canvas_pixle == 0 and  obj_pixle == 0:
+                    return False
+                
+                if canvas_pixle == 0 and obj_pixle == 255:
+                    overlay[row, col] = 0
+                elif canvas_pixle == 255 and obj_pixle == 0:
+                    overlay[row, col] = 0
+                elif canvas_pixle == 255 and obj_pixle == 255:
+                    overlay[row, col] = 255
+                else:
+                    print('FAILEd')
+        
+        self.img[min_row:max_row, min_col:max_col] = overlay
         
         return True
         
