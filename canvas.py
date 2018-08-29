@@ -27,7 +27,6 @@ def get_canvases(directory_path):
         top_left = [int(x) for x in cfg[i]['top_left']]
         bot_right = [int(x) for x in cfg[i]['bot_right']]   
 
-        
         canvases.append(Canvas(img, top_left, bot_right))
         
     return canvases   
@@ -66,30 +65,27 @@ class Canvas:
         
         self.min_row, self.max_row, self.min_col, self.max_col = top_left[0], bot_right[0], top_left[1], bot_right[1]
 
-        self.can_place = np.zeros_like(img)
-        self.can_place[np.where(img == 0)] = 1 # where it's already black(hand, page outline) we CANNOT draw on
         
-    
     def draw_on_background(self, obj, top_left_obj):
         
         bot_right_obj = (top_left_obj[0]+obj.shape[0], top_left_obj[1]+obj.shape[1])
         bot_left_obj = bot_right_obj[0], top_left_obj[1]
-        top_right_obj = top_left_obj[0], bot_right_obj[1]    
+        top_right_obj = top_left_obj[0], bot_right_obj[1]   
         
-        for row in range(obj.shape[0]):        
-            if top_left_obj[0] + row >= self.img.shape[0]:
-                break
-                
-            for col in range(obj.shape[1]):
+        min_row, max_row, min_col, max_col = top_left_obj[0], bot_right_obj[0], top_left_obj[1], bot_right_obj[1]   
 
-                if top_left_obj[1] + col >= self.img.shape[1]:
-                    break
-                
-                if cv.pointPolygonTest(self.x_y_contours, (top_left_obj[1] + col, top_left_obj[0] + row), False) > 0.0:
-                    continue
-
-
-                self.img[top_left_obj[0] + row, top_left_obj[1] + col] = obj[row, col]
+        if top_left_obj[0] + obj.shape[0] > self.img.shape[0] or top_left_obj[1] + obj.shape[1] > self.img.shape[1]:
+            return False
+        
+        mask = np.zeros_like(self.img)
+        mask = cv.fillPoly(mask, [self.x_y_contours], color=1) # 0/1 mask containg paper polygon region
+        
+        img2 = np.copy(self.img)
+        img2[min_row:max_row, min_col:max_col] = obj # draw on copy
+        img2 = img2 * (1-mask) # zero out paper polygon region
+        
+        self.img = (mask*self.img) + img2
+      
                 
     def rotate(self, degrees):
         rad = np.deg2rad(degrees)
@@ -98,8 +94,7 @@ class Canvas:
         original_shape = self.img.shape
         self.img = ndimage.rotate(self.img, angle=degrees, cval=255)
         
-        nw = np.dot(rt, self.x_y_contours.T - np.array(original_shape)[[1,0]].reshape(2,-1)/2.0)
-        nw += np.array([self.img.shape[1]/2, self.img.shape[0]/2]).reshape(2,-1)
+        nw = np.dot(rt, self.x_y_contours.T - np.array(original_shape)[[1,0]].reshape(2,-1)/2.0) + np.array([self.img.shape[1]/2, self.img.shape[0]/2]).reshape(2,-1)
         nw = nw.astype(np.int32)
         self.x_y_contours = nw.T
 
