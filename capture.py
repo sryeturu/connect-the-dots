@@ -78,9 +78,9 @@ class Capture:
             write_to_cfg(canvas_to_config)
             
         for img, num in self.nums:
-            num_cnt = get_number_of_images('nums/' + NUM_DIRECTORIES[num])
+            num_cnt = get_number_of_images('nums/' + str(num))
             
-            np.save('nums/' + NUM_DIRECTORIES[num] + '/' + str(num_cnt + 1), img)  # fix hard coded path slash?
+            np.save('nums/' + str(num) + '/' + str(num_cnt + 1), img)  # fix hard coded path slash?
             
         cur_dot_idx = get_number_of_images('dots/') + 1
         for img in self.dots:

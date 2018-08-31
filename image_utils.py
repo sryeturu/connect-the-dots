@@ -2,6 +2,7 @@ import glob
 import numpy as np
 import cv2 as cv
 import os
+import random
 
 from config import parse_cfg
 
@@ -36,6 +37,14 @@ def jpg_to_numpy(directory_path, gray=True, delete=False):
             os.remove(img_path)
             
 
+def resize(img, low, high):
+    scalar = random.uniform(low, high)
+    img = cv.resize(img, (int(img.shape[1]*scalar), int(img.shape[0]*scalar)))
+    img = adaptive_thresh(img)
+    
+    return img
+        
+    
 def adaptive_thresh(img, block_size=55, constant=10):
     return cv.adaptiveThreshold(img, 255,cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, block_size, constant) 
 

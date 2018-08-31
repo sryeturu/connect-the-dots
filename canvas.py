@@ -66,13 +66,13 @@ class Canvas:
         
     def draw_on_background(self, obj, top_left_obj):
         
+        if top_left_obj[1] + obj.shape[0] >= self.img.shape[0] or top_left_obj[0] + obj.shape[1] >= self.img.shape[1]:
+            return False
+
         top_left_obj, top_right_obj, bot_right_obj, bot_left_obj = get_corners(top_left_obj, obj)
                 
         x1, y1 = top_left_obj #top left
         x2, y2 = bot_right_obj #bot right        
-
-        if top_left_obj[1] + obj.shape[0] > self.img.shape[0] or top_left_obj[0] + obj.shape[1] > self.img.shape[1]:
-            return False
         
         mask = np.zeros_like(self.img)
         mask = cv.fillPoly(mask, [self.contours], color=1) # 0/1 mask containg paper polygon region
@@ -100,8 +100,17 @@ class Canvas:
         self.top_right = tuple(self.contours[1, :])
         self.bot_right = tuple(self.contours[2, :])
         self.bot_left = tuple(self.contours[3, :])
+    
+    
+    def all_corners_inside_paper(self, top_left_obj, obj):
 
-    def draw_on_paper(self, obj, top_left_obj):
+        for corner in get_corners(top_left_obj, obj):
+             if cv.pointPolygonTest(self.contours, (corner[1], corner[0]), False) < 0.0:
+                    return False
+    
+        return True
+
+    def draw_on_paper(self, obj, top_left_obj, can_overlap=False):
         """ tries to place an object(image) on the canvas paper
         
             Parameters
@@ -117,9 +126,10 @@ class Canvas:
             bool
                 wether the placement was succesful or not
         """
-        
 
-        
+        if top_left_obj[1] + obj.shape[0] >= self.img.shape[0] or top_left_obj[0] + obj.shape[1] >= self.img.shape[1]:
+            return False
+
         obj_corners = get_corners(top_left_obj, obj)
         for corner in obj_corners:
             if cv.pointPolygonTest(self.contours, corner , False) < 0.0: # corner x,y
@@ -130,7 +140,7 @@ class Canvas:
 
         overlay = np.copy(obj)
         
-        if np.alltrue(self.img[y1:y2, x1:x2] == 255):
+        if can_overlap or np.alltrue(self.img[y1:y2, x1:x2] == 255) :
             self.img[y1:y2, x1:x2]  = overlay
             return True
 
