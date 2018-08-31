@@ -10,11 +10,14 @@ from sampling import Sampler
 from config import parse_cfg
 
 NUM_OF_SAMPLES = 5
+
+IMAGE_SIZE = (672, 512) # (width, height)
+
+DRAW_BBOX = True
+DIRECTORY_NAME = 'objs'
 MAX_NUMBERS_TO_DRAW = 30
 MAX_DRAWINGS_TO_DRAW = 3
 MAX_BACKGROUNDS_TO_DRAW = 5
-DRAW_BBOX = True
-DIRECTORY_NAME = 'objs'
 
 def get_above_coords(canvas, dot, num_coords):
 
@@ -81,7 +84,7 @@ def main():
     dot_sampler = Sampler(get_img_data('dots'))
     background_sampler = Sampler(get_img_data('backgrounds'))
     drawing_sampler = Sampler(get_img_data('drawings'))
-
+    
     num_sampler = [None]
     
     for i in range(1,3):
@@ -90,13 +93,14 @@ def main():
 
     for img_idx in range(NUM_OF_SAMPLES):
         canvas = copy.deepcopy(canvas_sampler.get_sample())
-        bboxs = {}
         
+        bboxs = {}
+
         # drawing drawings
         num_of_drawings = random.randint(0, MAX_DRAWINGS_TO_DRAW)
         for i in range(num_of_drawings):
             drawing = drawing_sampler.get_sample()
-            drawing = resize(drawing, .8, 1.3)
+            drawing = random_resize(drawing, .8, 1.3)
             x1, y1 = get_potential_pos(canvas)
 
             while not canvas.draw_on_paper(drawing, (x1, y1), True):
@@ -107,7 +111,7 @@ def main():
         for i in range(num_of_nums):
             cur_num = random.randint(1,2)
             num = num_sampler[cur_num].get_sample()
-            num = resize(num, .8, 1.3)
+            num = random_resize(num, .8, 1.3)
             x1, y1 = get_potential_pos(canvas)
             
             while not canvas.draw_on_paper(num, (x1, y1)):
@@ -142,32 +146,16 @@ def main():
                     bboxs[0].append(get_corners(top_left, dot))
                     break
 
-        deg = np.random.uniform(-15, 15)
-
-        org_shape = canvas.img.shape
+        deg = 0
+        
         canvas.rotate(deg)
-
-        rad = np.deg2rad(deg)
-        rt = np.array([[np.cos(rad), np.sin(rad)], [-np.sin(rad), np.cos(rad)]])
-
-        bbox_str = ''
-        for k,v in bboxs.items():
-            for obj in v:
-                rt_bbox = np.dot(rt, np.array(obj).T - (np.array(org_shape[::-1])/2).reshape(2,-1)) + np.array([canvas.img.shape[1]/2, canvas.img.shape[0]/2]).reshape(2,-1)
-                rt_bbox = rt_bbox.astype(np.int32)
-                
-                corners = tuple(([tuple(x) for x in [rt_bbox[:, 0], rt_bbox[:, 1], rt_bbox[:, 2], rt_bbox[:, 3]]]))
-                bbox_str += ('%d %f %f %f %f\n' % (k, *get_yolo_bbox(corners, canvas)))
-
-                if DRAW_BBOX:
-                    canvas.img = cv.rectangle(canvas.img, corners[0], corners[2], (0), 1)
-
+        rot_center = np.array(canvas.img.shape[::-1]).reshape(2,-1) / 2
+    
         background_count = random.randint(0, MAX_BACKGROUNDS_TO_DRAW)
         for i in range(background_count):
 
             background = background_sampler.get_sample()
-
-            background = resize(background, .8, 1.3)
+            background = random_resize(background, .8, 1.3)
 
             y1 = random.randint(0, canvas.img.shape[0])
             x1 = random.randint(0, canvas.img.shape[1])
@@ -177,7 +165,28 @@ def main():
                 x1 = random.randint(0, canvas.img.shape[1])
 
             canvas.draw_on_background(background, (x1, y1))
+            
+        org_size = canvas.img.shape[::-1]
+        org_center = np.array(org_size).reshape(2,-1) / 2
         
+        canvas.resize(IMAGE_SIZE)
+        
+        rad = np.deg2rad(deg)
+        rt = np.array([[np.cos(rad), np.sin(rad)], [-np.sin(rad), np.cos(rad)]])
+        
+        bbox_str = ''
+        for k,v in bboxs.items():
+            for obj in v:
+                rt_bbox = np.dot(rt, np.array(obj).T - org_center) + rot_center
+
+                corners = tuple([get_scaled_position(corner, org_size, IMAGE_SIZE) for corner in [rt_bbox[:, 0], rt_bbox[:, 1], rt_bbox[:, 2], rt_bbox[:, 3]]])
+                
+                bbox_str += ('%d %f %f %f %f\n' % (k, *get_yolo_bbox(corners, canvas)))
+                
+                if DRAW_BBOX:            
+                    canvas.img = cv.rectangle(canvas.img, corners[0], corners[2], (0), 1)
+        
+
         file_path = DIRECTORY_NAME + '/img' + str(img_idx) 
 
         cv.imwrite(file_path + '.jpg', canvas.img)

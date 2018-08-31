@@ -37,7 +37,7 @@ def jpg_to_numpy(directory_path, gray=True, delete=False):
             os.remove(img_path)
             
 
-def resize(img, low, high):
+def random_resize(img, low, high):
     scalar = random.uniform(low, high)
     img = cv.resize(img, (int(img.shape[1]*scalar), int(img.shape[0]*scalar)))
     img = adaptive_thresh(img)
@@ -64,7 +64,12 @@ def cut_and_save(img_path, save_path, top_left, bot_right, gray=True):
     
     np.save(save_path, img[min_row:max_row, min_col:max_col])
     
-    
+def get_scaled_position(position, old_size, new_size):
+    x_p = position[0] / old_size[0]
+    y_p = position[1] / old_size[1]
+
+    return int(x_p*new_size[0]), int(y_p*new_size[1])
+
 def get_img_data(directory_path):
     
     path_slash = '\\' if os.name == 'nt' else '/'

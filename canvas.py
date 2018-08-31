@@ -5,8 +5,8 @@ import cv2 as cv
 
 from scipy import ndimage
 
-from image_utils import get_number_of_images, adaptive_thresh, get_corners
 from config import parse_cfg
+from image_utils import get_number_of_images, adaptive_thresh, get_corners, get_scaled_position
 
 def get_canvases(directory_path):
     
@@ -100,8 +100,21 @@ class Canvas:
         self.top_right = tuple(self.contours[1, :])
         self.bot_right = tuple(self.contours[2, :])
         self.bot_left = tuple(self.contours[3, :])
-    
-    
+
+    def resize(self, new_size):
+        
+        img_size = self.img.shape[::-1]
+        
+        self.top_left = get_scaled_position(self.top_left, img_size, new_size)
+        self.top_right = get_scaled_position(self.top_right, img_size, new_size)
+        self.bot_right = get_scaled_position(self.bot_right, img_size, new_size)
+        self.bot_left = get_scaled_position(self.bot_left, img_size, new_size)
+        
+        self.contours = np.array([self.top_left, self.top_right, self.bot_right, self.bot_left])
+        
+        self.img = cv.resize(self.img, new_size)
+        self.img = adaptive_thresh(self.img)
+
     def all_corners_inside_paper(self, top_left_obj, obj):
 
         for corner in get_corners(top_left_obj, obj):
