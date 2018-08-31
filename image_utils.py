@@ -76,7 +76,7 @@ def get_img_data(directory_path):
         img_names.append(cur_img_name)
             
  
-    return img_names, imgs
+    return imgs
 
 
 def get_number_of_images(directory_path):
