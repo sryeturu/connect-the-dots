@@ -108,7 +108,7 @@ class Capture:
                 _, self.frame = cap.read()
                 
                 self.frame = cv.cvtColor(self.frame, cv.COLOR_BGR2GRAY)
-                self.frame = cv.resize(self.frame, (1280, 720)) 
+                self.frame = cv.resize(self.frame, (672, 512)) 
                 self.frame = adaptive_thresh(self.frame)           
 
             cv.imshow('capture', self.frame)
