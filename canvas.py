@@ -5,7 +5,7 @@ import cv2 as cv
 
 from scipy import ndimage
 
-from image_utils import get_number_of_images
+from image_utils import get_number_of_images, adaptive_thresh, get_corners
 from config import parse_cfg
 
 def get_canvases(directory_path):
@@ -40,12 +40,12 @@ def write_to_cfg(canvases, append=True):
         sorted_keys = sorted(canvases)
         
         for key in sorted_keys:
-            min_row, min_col = canvases[key][0]
-            max_row, max_col = canvases[key][1]
+            x1, y1 = canvases[key][0]
+            x2, y2 = canvases[key][1]
        
             f.writelines('\n[%d]' % key)
-            f.writelines('\ntop_left =  %d, %d' % (min_row, min_col))
-            f.writelines('\nbot_right =  %d, %d' % (max_row, max_col))
+            f.writelines('\ntop_left =  %d, %d' % (x1, y1))
+            f.writelines('\nbot_right =  %d, %d' % (x2, y2))
             f.writelines('\n[end]\n')
             
             
@@ -58,30 +58,27 @@ class Canvas:
         # specify these are paper attributes
         self.top_left = top_left
         self.bot_right = bot_right        
-        self.bot_left = bot_right[0], top_left[1]
-        self.top_right = top_left[0], bot_right[1]    
+        self.bot_left = top_left[0], bot_right[1]
+        self.top_right = bot_right[0], top_left[1]    
         
-        self.x_y_contours = np.array([i[::-1] for i in [self.top_left, self.top_right, self.bot_right, self.bot_left]])
+        self.contours = np.array([self.top_left, self.top_right, self.bot_right, self.bot_left])
         
-        self.min_row, self.max_row, self.min_col, self.max_col = top_left[0], bot_right[0], top_left[1], bot_right[1]
-
         
     def draw_on_background(self, obj, top_left_obj):
         
-        bot_right_obj = (top_left_obj[0]+obj.shape[0], top_left_obj[1]+obj.shape[1])
-        bot_left_obj = bot_right_obj[0], top_left_obj[1]
-        top_right_obj = top_left_obj[0], bot_right_obj[1]   
-        
-        min_row, max_row, min_col, max_col = top_left_obj[0], bot_right_obj[0], top_left_obj[1], bot_right_obj[1]   
+        top_left_obj, top_right_obj, bot_right_obj, bot_left_obj = get_corners(top_left_obj, obj)
+                
+        x1, y1 = top_left_obj #top left
+        x2, y2 = bot_right_obj #bot right        
 
-        if top_left_obj[0] + obj.shape[0] > self.img.shape[0] or top_left_obj[1] + obj.shape[1] > self.img.shape[1]:
+        if top_left_obj[1] + obj.shape[0] > self.img.shape[0] or top_left_obj[0] + obj.shape[1] > self.img.shape[1]:
             return False
         
         mask = np.zeros_like(self.img)
-        mask = cv.fillPoly(mask, [self.x_y_contours], color=1) # 0/1 mask containg paper polygon region
+        mask = cv.fillPoly(mask, [self.contours], color=1) # 0/1 mask containg paper polygon region
         
         img2 = np.copy(self.img)
-        img2[min_row:max_row, min_col:max_col] = obj # draw on copy
+        img2[y1:y2, x1:x2] = obj # draw on copy
         img2 = img2 * (1-mask) # zero out paper polygon region
         
         self.img = (mask*self.img) + img2
@@ -92,11 +89,17 @@ class Canvas:
         rt = np.array([[np.cos(rad), np.sin(rad)], [-np.sin(rad), np.cos(rad)]])
         
         original_shape = self.img.shape
-        self.img = ndimage.rotate(self.img, angle=degrees, cval=255)
+        self.img = adaptive_thresh(ndimage.rotate(self.img, angle=degrees, cval=255))
         
-        nw = np.dot(rt, self.x_y_contours.T - np.array(original_shape)[[1,0]].reshape(2,-1)/2.0) + np.array([self.img.shape[1]/2, self.img.shape[0]/2]).reshape(2,-1)
+        nw = np.dot(rt, self.contours.T - np.array(original_shape)[[1,0]].reshape(2,-1)/2.0) + np.array([self.img.shape[1]/2, self.img.shape[0]/2]).reshape(2,-1)
         nw = nw.astype(np.int32)
-        self.x_y_contours = nw.T
+        
+        self.contours = nw.T
+        
+        self.top_left = tuple(self.contours[0, :])
+        self.top_right = tuple(self.contours[1, :])
+        self.bot_right = tuple(self.contours[2, :])
+        self.bot_left = tuple(self.contours[3, :])
 
     def draw_on_paper(self, obj, top_left_obj):
         """ tries to place an object(image) on the canvas paper
@@ -115,28 +118,25 @@ class Canvas:
                 wether the placement was succesful or not
         """
         
-        bot_right_obj = (top_left_obj[0]+obj.shape[0], top_left_obj[1]+obj.shape[1])
-        bot_left_obj = bot_right_obj[0], top_left_obj[1]
-        top_right_obj = top_left_obj[0], bot_right_obj[1]    
-        
-        obj_corners = [top_left_obj, top_right_obj, bot_right_obj, bot_left_obj]
 
+        
+        obj_corners = get_corners(top_left_obj, obj)
         for corner in obj_corners:
-            if cv.pointPolygonTest(self.x_y_contours, (corner[1], corner[0]), False) < 0.0:
+            if cv.pointPolygonTest(self.contours, corner , False) < 0.0: # corner x,y
                 return False
-            
-        min_row, max_row, min_col, max_col = top_left_obj[0], bot_right_obj[0], top_left_obj[1], bot_right_obj[1]   
+        
+        x1, y1 = obj_corners[0] #top left
+        x2, y2 = obj_corners[2] #bot right
 
         overlay = np.copy(obj)
         
-        if np.alltrue(self.img[min_row:max_row, min_col:max_col] == 255):
-            self.img[min_row:max_row, min_col:max_col] = overlay
+        if np.alltrue(self.img[y1:y2, x1:x2] == 255):
+            self.img[y1:y2, x1:x2]  = overlay
             return True
 
-        
         for row in range(obj.shape[0]):
             for col in range(obj.shape[1]):
-                canvas_pixle = self.img[top_left_obj[0]+row, top_left_obj[1]+col]
+                canvas_pixle = self.img[y1+row, x1+col]
                 obj_pixle = obj[row, col]
                 
                 if canvas_pixle == 0 and  obj_pixle == 0:
@@ -149,9 +149,9 @@ class Canvas:
                 elif canvas_pixle == 255 and obj_pixle == 255:
                     overlay[row, col] = 255
                 else:
-                    print('FAILEd')
+                    raise ValueError('pixel color mismatch')
         
-        self.img[min_row:max_row, min_col:max_col] = overlay
+        self.img[y1:y2, x1:x2] = overlay
         
         return True
         

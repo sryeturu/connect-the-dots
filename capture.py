@@ -33,9 +33,9 @@ class Capture:
         if len(self.points) == 2:
             
             cur_frame = self.frame.copy()
-            min_col,min_row = self.points[0]  # opencv garbage
-            max_col, max_row = self.points[1]
-            img = cur_frame[min_row:max_row, min_col:max_col]
+            x1, y1 = self.points[0]  # opencv garbage
+            x2, y2 = self.points[1]
+            img = cur_frame[y1:y2, x1:x2]
             
             cv.rectangle(self.frame, self.points[0], self.points[1], (0), 2)
             cv.imshow('capture', self.frame)
@@ -44,7 +44,7 @@ class Capture:
             key = cv.waitKey(0)
 
             if key == 99: # canvas
-                self.canvases.append((cur_frame, (min_row,min_col), (max_row,max_col)))
+                self.canvases.append((cur_frame, (x1, y1), (x2, y2)))
                 print('saved blank')                
             elif key == 110: # number
                 print('ok, what number?')

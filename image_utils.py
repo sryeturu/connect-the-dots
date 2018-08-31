@@ -6,6 +6,17 @@ import os
 from config import parse_cfg
 
 
+
+def get_corners(top_left_obj, obj):
+    
+    bot_right_obj = (top_left_obj[0]+obj.shape[1], top_left_obj[1]+obj.shape[0])
+    bot_left_obj = top_left_obj[0], bot_right_obj[1]
+    top_right_obj = bot_right_obj[0], top_left_obj[1]    
+
+    obj_corners = [top_left_obj, top_right_obj, bot_right_obj, bot_left_obj]
+    
+    return obj_corners
+
 def jpg_to_numpy(directory_path, gray=True, delete=False):
     
     path_slash = '\\' if os.name == 'nt' else '/'
