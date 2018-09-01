@@ -145,11 +145,14 @@ def main():
 
                     bboxs[0].append(get_corners(top_left, dot))
                     break
-
-        deg = 0
+                    
+        deg = np.random.uniform(-15, 15)
         
+        org_center = np.array(canvas.img.shape[::-1]).reshape(2,-1) / 2
+
         canvas.rotate(deg)
         rot_center = np.array(canvas.img.shape[::-1]).reshape(2,-1) / 2
+        rot_size = canvas.img.shape[::-1]
     
         background_count = random.randint(0, MAX_BACKGROUNDS_TO_DRAW)
         for i in range(background_count):
@@ -165,10 +168,8 @@ def main():
                 x1 = random.randint(0, canvas.img.shape[1])
 
             canvas.draw_on_background(background, (x1, y1))
-            
-        org_size = canvas.img.shape[::-1]
-        org_center = np.array(org_size).reshape(2,-1) / 2
         
+                
         canvas.resize(IMAGE_SIZE)
         
         rad = np.deg2rad(deg)
@@ -178,9 +179,9 @@ def main():
         for k,v in bboxs.items():
             for obj in v:
                 rt_bbox = np.dot(rt, np.array(obj).T - org_center) + rot_center
-
-                corners = tuple([get_scaled_position(corner, org_size, IMAGE_SIZE) for corner in [rt_bbox[:, 0], rt_bbox[:, 1], rt_bbox[:, 2], rt_bbox[:, 3]]])
                 
+                corners = tuple([get_scaled_position(corner, rot_size, IMAGE_SIZE) for corner in [rt_bbox[:, 0], rt_bbox[:, 1], rt_bbox[:, 2], rt_bbox[:, 3]]])
+        
                 bbox_str += ('%d %f %f %f %f\n' % (k, *get_yolo_bbox(corners, canvas)))
                 
                 if DRAW_BBOX:            
