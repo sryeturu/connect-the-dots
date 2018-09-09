@@ -11,13 +11,14 @@ from config import parse_cfg
 
 NUM_OF_SAMPLES = 5
 
-IMAGE_SIZE = (672, 512) # (width, height)
+MAX_NUMBERS_TO_DRAW = 10
+MAX_DRAWINGS_TO_DRAW = 3
+MAX_BACKGROUNDS_TO_DRAW = 5
 
 DRAW_BBOX = True
 DIRECTORY_NAME = 'objs'
-MAX_NUMBERS_TO_DRAW = 30
-MAX_DRAWINGS_TO_DRAW = 3
-MAX_BACKGROUNDS_TO_DRAW = 5
+IMAGE_SIZE = (672, 512) # (width, height)
+
 
 def get_above_coords(canvas, dot, num_coords):
 
@@ -169,7 +170,6 @@ def main():
 
             canvas.draw_on_background(background, (x1, y1))
         
-                
         canvas.resize(IMAGE_SIZE)
         
         rad = np.deg2rad(deg)
@@ -188,7 +188,8 @@ def main():
                     canvas.img = cv.rectangle(canvas.img, corners[0], corners[2], (0), 1)
         
 
-        file_path = DIRECTORY_NAME + '/img' + str(img_idx) 
+        file_path = DIRECTORY_NAME + '/img' + str(img_idx + 1) 
+        print(np.unique(canvas.img))
 
         cv.imwrite(file_path + '.jpg', canvas.img)
         with open(file_path + '.txt', 'w') as f:

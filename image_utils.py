@@ -6,8 +6,6 @@ import random
 
 from config import parse_cfg
 
-
-
 def get_corners(top_left_obj, obj):
     
     bot_right_obj = (top_left_obj[0]+obj.shape[1], top_left_obj[1]+obj.shape[0])
