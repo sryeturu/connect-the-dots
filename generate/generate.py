@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 import random
+import shutil
 import copy
 
 from image_utils import *
@@ -9,15 +10,23 @@ from scipy import ndimage
 from sampling import Sampler
 from config import parse_cfg
 
-NUM_OF_SAMPLES = 5
+
+NUM_OF_SAMPLES = 10
+MAX_NUMBER = 2
 
 MAX_NUMBERS_TO_DRAW = 10
 MAX_DRAWINGS_TO_DRAW = 3
 MAX_BACKGROUNDS_TO_DRAW = 5
 
 DRAW_BBOX = True
-DIRECTORY_NAME = 'objs'
 IMAGE_SIZE = (672, 512) # (width, height)
+
+RESULTS_DIR = 'results'
+
+OBJ_IMAGES_DIR = RESULTS_DIR + '/objs'
+OBJ_DATA_FILE = RESULTS_DIR + '/obj.data'
+OBJ_NAME_FILE = RESULTS_DIR + '/obj.names'
+TRAIN_FILE = RESULTS_DIR + '/train.txt'
 
 
 def get_above_coords(canvas, dot, num_coords):
@@ -74,11 +83,34 @@ def get_yolo_bbox(corners, canvas):
     
     return x_abs, y_abs, width_abs, height_abs
 
+def write_obj_names(): 
+    with open(OBJ_NAME_FILE, 'w') as f:
+        f.write('dot\n')
+        for i in range(1, MAX_NUMBER+1):      
+            f.write(str(i) + '\n')
+
+def write_train_file():
+    with open(TRAIN_FILE, 'w') as f:
+        for i in range(1, NUM_OF_SAMPLES+1):      
+            f.write('%s/img%d.png\n' % (OBJ_IMAGES_DIR, i))
+
+def write_data_file():
+    with open(OBJ_DATA_FILE, 'w') as f:
+        f.write('classes = %d\n' % (MAX_NUMBER + 1))
+        f.write('train = %s\n' % TRAIN_FILE)
+        f.write('valid = %s\n' % 'results/test.txt')
+        f.write('names = %s\n' % OBJ_NAME_FILE )
+        f.write('backup = backup/')
+
+
 def main():
     
-    if not os.path.isdir(DIRECTORY_NAME):
-        os.makedirs(DIRECTORY_NAME)
-        
+    if os.path.isdir(RESULTS_DIR):
+        shutil.rmtree(RESULTS_DIR)
+
+    os.makedirs(RESULTS_DIR)
+    os.makedirs(OBJ_IMAGES_DIR)
+
     func = [get_above_coords, get_below_coords, get_left_coords, get_right_coords]
 
     canvas_sampler = Sampler(get_canvases('canvases'))
@@ -88,11 +120,18 @@ def main():
     
     num_sampler = [None]
     
-    for i in range(1,3):
+    for i in range(1, MAX_NUMBER+1):
         imgs = get_img_data('nums/' + str(i))
         num_sampler.append(Sampler(imgs))
-
+    
+    imgs = []
+    bbox_strings = []
+    
     for img_idx in range(NUM_OF_SAMPLES):
+        
+        if img_idx > 0 and img_idx % 25 == 0:
+            print('completed generating %d images' % img_idx)
+            
         canvas = copy.deepcopy(canvas_sampler.get_sample())
         
         bboxs = {}
@@ -110,7 +149,7 @@ def main():
         # drawing numbers
         num_of_nums = random.randint(0, MAX_NUMBERS_TO_DRAW)
         for i in range(num_of_nums):
-            cur_num = random.randint(1,2)
+            cur_num = random.randint(1, MAX_NUMBER)
             num = num_sampler[cur_num].get_sample()
             num = random_resize(num, .8, 1.3)
             x1, y1 = get_potential_pos(canvas)
@@ -188,12 +227,17 @@ def main():
                     canvas.img = cv.rectangle(canvas.img, corners[0], corners[2], (0), 1)
         
 
-        file_path = DIRECTORY_NAME + '/img' + str(img_idx + 1) 
-        print(np.unique(canvas.img))
-
-        cv.imwrite(file_path + '.jpg', canvas.img)
+        file_path = OBJ_IMAGES_DIR + '/img' + str(img_idx + 1) 
+        
+        # writing .png
+        cv.imwrite(file_path + '.png', canvas.img)
+        # writing .txt
         with open(file_path + '.txt', 'w') as f:
             f.write(bbox_str)
             
+    write_obj_names()
+    write_train_file()
+    write_data_file()
+    
 if __name__ == '__main__':
     main()
