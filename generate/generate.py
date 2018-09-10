@@ -14,13 +14,12 @@ from config import parse_cfg
 NUM_OF_SAMPLES = 10
 MAX_NUMBER = 4
 
-MAX_NUMBERS_TO_DRAW = 20
-MAX_DRAWINGS_TO_DRAW = 3
+MAX_NUMBERS_TO_DRAW = 10
+MAX_DRAWINGS_TO_DRAW = 4
 MAX_BACKGROUNDS_TO_DRAW = 5
 
 DRAW_BBOX = False
-IMAGE_SIZE = (672, 512) # (width, height)
-IMAGE_SIZE = (704, 416) # (width, height)
+IMAGE_SIZE = (480, 480) # (width, height)
 
 RESULTS_DIR = 'results'
 
@@ -133,6 +132,11 @@ def main():
         if img_idx > 0 and img_idx % 25 == 0:
             print('completed generating %d images' % img_idx)
             
+        number_size_scalar = random.uniform(.25, .5)
+        dot_size_scalar = random.uniform(.7, 1.1)
+        drawing_size_scalar = random.uniform(.8, 1.2)
+        background_size_scalar = random.uniform(.8, 1.4)
+        
         canvas = copy.deepcopy(canvas_sampler.get_sample())
         
         bboxs = {}
@@ -141,7 +145,7 @@ def main():
         num_of_drawings = random.randint(0, MAX_DRAWINGS_TO_DRAW)
         for i in range(num_of_drawings):
             drawing = drawing_sampler.get_sample()
-            drawing = random_resize(drawing, 1.0, 1.0)
+            drawing = resize(drawing, drawing_size_scalar)
             x1, y1 = get_potential_pos(canvas)
 
             while not canvas.draw_on_paper(drawing, (x1, y1), True):
@@ -152,7 +156,7 @@ def main():
         for i in range(num_of_nums):
             cur_num = random.randint(1, MAX_NUMBER)
             num = num_sampler[cur_num].get_sample()
-            num = random_resize(num, .9, 0.9)
+            num = resize(num, number_size_scalar)
             num = adaptive_thresh(ndimage.rotate(num, angle=random.randint(-15, 15), cval=255))
 
             x1, y1 = get_potential_pos(canvas)
@@ -175,9 +179,9 @@ def main():
 
             np.random.shuffle(func)
 
-            scalar = .8   
+            scalar = random.uniform(.8, 1.2)
             dot = dot_sampler.get_sample()
-            dot = cv.resize(dot, ( int(dot.shape[0]*scalar), int(dot.shape[1]*scalar)))
+            dot = resize(dot,dot_size_scalar)
             dot = adaptive_thresh(dot)
 
             for f in func:
@@ -201,7 +205,7 @@ def main():
         for i in range(background_count):
 
             background = background_sampler.get_sample()
-            background = random_resize(background, .8, 1.3)
+            background = resize(background, background_size_scalar)
 
             y1 = random.randint(0, canvas.img.shape[0])
             x1 = random.randint(0, canvas.img.shape[1])

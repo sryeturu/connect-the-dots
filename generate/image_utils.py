@@ -35,8 +35,7 @@ def jpg_to_numpy(directory_path, gray=True, delete=False):
             os.remove(img_path)
             
 
-def random_resize(img, low, high):
-    scalar = random.uniform(low, high)
+def resize(img, scalar):
     img = cv.resize(img, (int(img.shape[1]*scalar), int(img.shape[0]*scalar)))
     img = adaptive_thresh(img)
     

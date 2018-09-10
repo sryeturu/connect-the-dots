@@ -4,15 +4,16 @@ import numpy as np
 from image_utils import adaptive_thresh, get_number_of_images
 from canvas import write_to_cfg
 
-IMAGE_SIZE = (704, 416) # (width, height)
 
 class Capture:
     
     # some help here from : https://www.pyimagesearch.com/2015/03/09/capturing-mouse-click-events-with-python-and-opencv/
 
-    def __init__(self):
-        self.points = []
+    def __init__(self, image_size):
         
+        self.img_size = image_size
+        self.img_size = 
+        self.points = []
         self.canvases = []
         self.nums = []
         self.dots = []
@@ -46,7 +47,9 @@ class Capture:
 
             if key == 99: # canvas
                 self.canvases.append((cur_frame, (x1, y1), (x2, y2)))
-                print('saved blank')                
+                self.freeze = 0 # probably want to unfreeze wehenever we get a canvas pic
+
+                print('saved canvas')                
             elif key == 110: # number
                 print('ok, what number?')
                 num = int(input())
@@ -128,5 +131,8 @@ class Capture:
         cap.release()
         
         self.save_captures()
-            
-Capture().run()
+
+        
+if __name__ == '__main__':
+    IMAGE_SIZE = (704, 416) # (width, height)
+    Capture(IMAGE_SIZE).run()
