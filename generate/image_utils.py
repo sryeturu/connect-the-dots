@@ -43,7 +43,7 @@ def random_resize(img, low, high):
     return img
         
     
-def adaptive_thresh(img, block_size=55, constant=10):
+def adaptive_thresh(img, block_size=15, constant=10):
     return cv.adaptiveThreshold(img, 255,cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, block_size, constant) 
 
 

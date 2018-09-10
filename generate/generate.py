@@ -12,14 +12,15 @@ from config import parse_cfg
 
 
 NUM_OF_SAMPLES = 10
-MAX_NUMBER = 2
+MAX_NUMBER = 4
 
-MAX_NUMBERS_TO_DRAW = 10
+MAX_NUMBERS_TO_DRAW = 20
 MAX_DRAWINGS_TO_DRAW = 3
 MAX_BACKGROUNDS_TO_DRAW = 5
 
-DRAW_BBOX = True
+DRAW_BBOX = False
 IMAGE_SIZE = (672, 512) # (width, height)
+IMAGE_SIZE = (704, 416) # (width, height)
 
 RESULTS_DIR = 'results'
 
@@ -140,7 +141,7 @@ def main():
         num_of_drawings = random.randint(0, MAX_DRAWINGS_TO_DRAW)
         for i in range(num_of_drawings):
             drawing = drawing_sampler.get_sample()
-            drawing = random_resize(drawing, .8, 1.3)
+            drawing = random_resize(drawing, 1.0, 1.0)
             x1, y1 = get_potential_pos(canvas)
 
             while not canvas.draw_on_paper(drawing, (x1, y1), True):
@@ -151,7 +152,9 @@ def main():
         for i in range(num_of_nums):
             cur_num = random.randint(1, MAX_NUMBER)
             num = num_sampler[cur_num].get_sample()
-            num = random_resize(num, .8, 1.3)
+            num = random_resize(num, .9, 0.9)
+            num = adaptive_thresh(ndimage.rotate(num, angle=random.randint(-15, 15), cval=255))
+
             x1, y1 = get_potential_pos(canvas)
             
             while not canvas.draw_on_paper(num, (x1, y1)):
@@ -186,7 +189,7 @@ def main():
                     bboxs[0].append(get_corners(top_left, dot))
                     break
                     
-        deg = np.random.uniform(-15, 15)
+        deg = 0 # rotations not working out so well
         
         org_center = np.array(canvas.img.shape[::-1]).reshape(2,-1) / 2
 
@@ -209,7 +212,8 @@ def main():
 
             canvas.draw_on_background(background, (x1, y1))
         
-        canvas.resize(IMAGE_SIZE)
+        if deg != 0:
+            canvas.resize(IMAGE_SIZE)
         
         rad = np.deg2rad(deg)
         rt = np.array([[np.cos(rad), np.sin(rad)], [-np.sin(rad), np.cos(rad)]])

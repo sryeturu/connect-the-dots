@@ -1,9 +1,10 @@
 import cv2 as cv
 import numpy as np
-from constants import NUM_DIRECTORIES
 
 from image_utils import adaptive_thresh, get_number_of_images
 from canvas import write_to_cfg
+
+IMAGE_SIZE = (704, 416) # (width, height)
 
 class Capture:
     
@@ -37,10 +38,10 @@ class Capture:
             x2, y2 = self.points[1]
             img = cur_frame[y1:y2, x1:x2]
             
-            cv.rectangle(self.frame, self.points[0], self.points[1], (0), 2)
+            cv.rectangle(self.frame, self.points[0], self.points[1], (0), 1)
             cv.imshow('capture', self.frame)
             
-            print("want to save this image? c(canvas) n(num) d(dot) b(background) r(drawing) esc(no)")
+            print("save an image: c(canvas) n(num) d(dot) b(background) r(drawing) u(unfreeze)")
             key = cv.waitKey(0)
 
             if key == 99: # canvas
@@ -60,8 +61,9 @@ class Capture:
             elif key == 114: # drawings
                 self.drawings.append(img)
                 print('saved drawing')
+            else:
+                self.freeze = 0 # unfreeze
                 
-            self.freeze = 0 # unfreeze if frozen
             self.points = [] # reset points
 
             
@@ -108,7 +110,7 @@ class Capture:
                 _, self.frame = cap.read()
                 
                 self.frame = cv.cvtColor(self.frame, cv.COLOR_BGR2GRAY)
-                self.frame = cv.resize(self.frame, (672, 512)) 
+                self.frame = cv.resize(self.frame, IMAGE_SIZE) 
                 self.frame = adaptive_thresh(self.frame)           
 
             cv.imshow('capture', self.frame)
