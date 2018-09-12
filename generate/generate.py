@@ -11,7 +11,9 @@ from sampling import Sampler
 from config import parse_cfg
 
 
-NUM_OF_SAMPLES = 100
+NUM_OF_TRAIN_SAMPLES = 5
+NUM_OF_VALID_SAMPLES = 2
+
 MAX_NUMBER = 14
 
 MAX_NUMBERS_TO_DRAW = 10
@@ -27,6 +29,7 @@ OBJ_IMAGES_DIR = RESULTS_DIR + '/objs'
 OBJ_DATA_FILE = RESULTS_DIR + '/obj.data'
 OBJ_NAME_FILE = RESULTS_DIR + '/obj.names'
 TRAIN_FILE = RESULTS_DIR + '/train.txt'
+VALID_FILE = RESULTS_DIR + '/valid.txt'
 
 
 def get_above_coords(canvas, dot, num_coords):
@@ -89,16 +92,20 @@ def write_obj_names():
         for i in range(1, MAX_NUMBER+1):      
             f.write(str(i) + '\n')
 
-def write_train_file():
+def write_train_and_val_file():
     with open(TRAIN_FILE, 'w') as f:
-        for i in range(1, NUM_OF_SAMPLES+1):      
-            f.write('%s/img%d.png\n' % (OBJ_IMAGES_DIR, i))
+        for i in range(NUM_OF_TRAIN_SAMPLES):      
+            f.write('%s/img%d.png\n' % (OBJ_IMAGES_DIR, i + 1))
 
+    with open(VALID_FILE, 'w') as f:
+        for i in range(NUM_OF_VALID_SAMPLES):      
+            f.write('%s/img%d.png\n' % (OBJ_IMAGES_DIR, NUM_OF_TRAIN_SAMPLES + i + 1))
+        
 def write_data_file():
     with open(OBJ_DATA_FILE, 'w') as f:
         f.write('classes = %d\n' % (MAX_NUMBER + 1))
         f.write('train = %s\n' % TRAIN_FILE)
-        f.write('valid = %s\n' % 'results/test.txt')
+        f.write('valid = %s\n' % VALID_FILE)
         f.write('names = %s\n' % OBJ_NAME_FILE )
         f.write('backup = backup/')
 
@@ -127,7 +134,7 @@ def main():
     imgs = []
     bbox_strings = []
     
-    for img_idx in range(NUM_OF_SAMPLES):
+    for img_idx in range(NUM_OF_TRAIN_SAMPLES + NUM_OF_VALID_SAMPLES):
         
         if img_idx > 0 and img_idx % 25 == 0:
             print('completed generating %d images' % img_idx)
@@ -244,7 +251,7 @@ def main():
             f.write(bbox_str)
             
     write_obj_names()
-    write_train_file()
+    write_train_and_val_file()
     write_data_file()
     
 if __name__ == '__main__':
