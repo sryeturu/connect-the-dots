@@ -12,7 +12,6 @@ class Capture:
     def __init__(self, image_size):
         
         self.img_size = image_size
-        self.img_size = 
         self.points = []
         self.canvases = []
         self.nums = []
@@ -113,7 +112,7 @@ class Capture:
                 _, self.frame = cap.read()
                 
                 self.frame = cv.cvtColor(self.frame, cv.COLOR_BGR2GRAY)
-                self.frame = cv.resize(self.frame, IMAGE_SIZE) 
+                self.frame = cv.resize(self.frame, self.img_size) 
                 self.frame = adaptive_thresh(self.frame)           
 
             cv.imshow('capture', self.frame)

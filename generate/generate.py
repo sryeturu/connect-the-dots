@@ -11,15 +11,15 @@ from sampling import Sampler
 from config import parse_cfg
 
 
-NUM_OF_SAMPLES = 10
-MAX_NUMBER = 4
+NUM_OF_SAMPLES = 100
+MAX_NUMBER = 14
 
 MAX_NUMBERS_TO_DRAW = 10
 MAX_DRAWINGS_TO_DRAW = 4
 MAX_BACKGROUNDS_TO_DRAW = 5
 
 DRAW_BBOX = False
-IMAGE_SIZE = (480, 480) # (width, height)
+IMAGE_SIZE = (704, 416) # (width, height)
 
 RESULTS_DIR = 'results'
 
@@ -132,8 +132,8 @@ def main():
         if img_idx > 0 and img_idx % 25 == 0:
             print('completed generating %d images' % img_idx)
             
-        number_size_scalar = random.uniform(.25, .5)
-        dot_size_scalar = random.uniform(.7, 1.1)
+        number_size_scalar = random.uniform(.35, .75)
+        dot_size_scalar = random.uniform(.5, 1.1)
         drawing_size_scalar = random.uniform(.8, 1.2)
         background_size_scalar = random.uniform(.8, 1.4)
         
