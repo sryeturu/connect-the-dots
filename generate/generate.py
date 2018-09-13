@@ -11,12 +11,12 @@ from sampling import Sampler
 from config import parse_cfg
 
 
-NUM_OF_TRAIN_SAMPLES = 5
+NUM_OF_TRAIN_SAMPLES = 20
 NUM_OF_VALID_SAMPLES = 2
 
-MAX_NUMBER = 14
+MAX_NUMBER = 10
 
-MAX_NUMBERS_TO_DRAW = 10
+MAX_NUMBERS_TO_DRAW = 12
 MAX_DRAWINGS_TO_DRAW = 4
 MAX_BACKGROUNDS_TO_DRAW = 5
 
@@ -139,7 +139,7 @@ def main():
         if img_idx > 0 and img_idx % 25 == 0:
             print('completed generating %d images' % img_idx)
             
-        number_size_scalar = random.uniform(.35, .75)
+        number_size_scalar = random.uniform(.5, .55)
         dot_size_scalar = random.uniform(.5, 1.1)
         drawing_size_scalar = random.uniform(.8, 1.2)
         background_size_scalar = random.uniform(.8, 1.4)
@@ -164,7 +164,7 @@ def main():
             cur_num = random.randint(1, MAX_NUMBER)
             num = num_sampler[cur_num].get_sample()
             num = resize(num, number_size_scalar)
-            num = adaptive_thresh(ndimage.rotate(num, angle=random.randint(-15, 15), cval=255))
+            num = adaptive_thresh(ndimage.rotate(num, angle=random.randint(-5, 5), cval=255))
 
             x1, y1 = get_potential_pos(canvas)
             
