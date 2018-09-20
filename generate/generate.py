@@ -10,18 +10,17 @@ from scipy import ndimage
 from sampling import Sampler
 from config import parse_cfg
 
-
 NUM_OF_TRAIN_SAMPLES = 20
 NUM_OF_VALID_SAMPLES = 2
 
-MAX_NUMBER = 10
+MAX_NUMBER = 1
 
 MAX_NUMBERS_TO_DRAW = 12
 MAX_DRAWINGS_TO_DRAW = 4
 MAX_BACKGROUNDS_TO_DRAW = 5
 
 DRAW_BBOX = False
-IMAGE_SIZE = (704, 416) # (width, height)
+IMAGE_SIZE = (608, 608) # (width, height)
 
 RESULTS_DIR = 'results'
 

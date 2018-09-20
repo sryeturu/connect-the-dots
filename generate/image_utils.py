@@ -77,9 +77,9 @@ def get_img_data(directory_path):
     img_names = []
     imgs = []
     
-    for file_name in glob.glob(directory_path + '*'):
+    for file_name in glob.glob(directory_path + '*.png'):
 
-        cur_img = np.load(file_name)
+        cur_img = cv.imread(file_name)[:,:,0]
         imgs.append(cur_img)
 
         cur_img_name = file_name.split(path_slash)[-1]
@@ -96,4 +96,4 @@ def get_number_of_images(directory_path):
     if directory_path[-1] != path_slash:
         directory_path += path_slash
     
-    return len(glob.glob(directory_path + '*.npy'))
+    return len(glob.glob(directory_path + '*.png'))

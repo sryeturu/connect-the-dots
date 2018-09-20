@@ -4,8 +4,12 @@ def parse_cfg(cfg_path):
     all_lines = []
     
     with open(cfg_path) as f:
-        for line in f: 
-            all_lines.append(line.strip())
+        for line in f:
+            line = line.strip()
+            if len(line) == 0 or line[0] == '' or line[0] == '#':
+                continue
+            else:
+                all_lines.append(line.strip())
 
             
     def get_key_value(line):
@@ -25,9 +29,7 @@ def parse_cfg(cfg_path):
     while  cur_iter < len(all_lines):
         line = all_lines[cur_iter]
 
-        if len(line) == 0 or line[0] == '' or line[0] == '#':
-            pass
-        elif line[0] == '[':
+        if line[0] == '[':
             collection_name = line[1:-1]
 
             sub_cfg = {}

@@ -23,7 +23,7 @@ def get_canvases(directory_path):
     num_of_canvases = get_number_of_images(directory_path)
     for i in range(1, num_of_canvases+1):
         i = str(i)
-        img = np.load(directory_path + i + '.npy')
+        img = cv.imread(directory_path + i + '.png')[:,:,0]
         top_left = [int(x) for x in cfg[i]['top_left']]
         bot_right = [int(x) for x in cfg[i]['bot_right']]   
 
