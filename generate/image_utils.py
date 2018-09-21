@@ -97,3 +97,22 @@ def get_number_of_images(directory_path):
         directory_path += path_slash
     
     return len(glob.glob(directory_path + '*.png'))
+
+
+def delete_captured_images():
+    
+    for i in glob.glob('dots/*'):
+        os.remove(i)
+
+    for i in glob.glob('nums/*'):
+        for j in glob.glob(i+'/*'):
+            os.remove(j)
+
+    for i in glob.glob('canvases/*'):
+        os.remove(i)
+
+    for i in glob.glob('backgrounds/*'):
+        os.remove(i)
+
+    for i in glob.glob('drawings/*'):
+        os.remove(i)
