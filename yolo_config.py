@@ -1,6 +1,6 @@
 
-
 def parse_config(config_file_name):
+    
     config = []
     
     with open(config_file_name) as file:    

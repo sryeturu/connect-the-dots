@@ -144,7 +144,7 @@ class Capture:
                 ad_thresh = not ad_thresh
             elif key == 115:
                 cv.imwrite('result.png', self.frame)
-                print('saved image as resut.png')
+                print('saved image as result.png')
                 
         cap.release()
         

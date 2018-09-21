@@ -1,7 +1,7 @@
 import tensorflow as tf
 from yolo_config import parse_config
 import numpy as np
-import cv2
+import cv2 as cv
 from timeit import default_timer as timer
 
 
@@ -9,7 +9,7 @@ class Yolo:
     
     
     def __init__(self, weight_file, cfg_file, device='CPU', weight_file_offset=4*4):
-        print(weight_file)
+        
         fp = open(weight_file, 'rb')
         fp.seek(weight_file_offset) # skipping any header stuff from weight file
         
@@ -19,21 +19,36 @@ class Yolo:
         
         self.build_graph()
     
+    def get_inp_size(self, return_type='hw'):
+        
+        if return_type == 'hw':
+            return int(self.model_cfg['height']), int(self.model_cfg['width'])
+        elif return_type == 'xy':
+            return int(self.model_cfg['width']), int(self.model_cfg['height'])
 
+    
     def preprocess(self, img):
 
-        img = cv2.resize(img, (int(self.model_cfg['height']), int(int(self.model_cfg['width']))), interpolation=1)
-        img = img[np.newaxis,:,:,:]/255.0
-        return img[:, :, : , 0, np.newaxis]
+        if img.shape[2] == 3: # if 3 color channels
+            img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+            img = cv.adaptiveThreshold(img, 255,cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 17, 10)  # put these magic constrants in a config
+
+            img = cv.resize(img, (int(self.model_cfg['width']), int(self.model_cfg['height'])), interpolation=1)
+            img = img[np.newaxis,:,:, np.newaxis]/255.0
+        else: # if 1 color channel
+            img = cv.resize(img, (int(self.model_cfg['width']), int(self.model_cfg['height'])), interpolation=1)
+            img = img[np.newaxis,:,:,:]/255.0
+            img = img[:, :, : , 0, np.newaxis]
+
+        return img
 
 
     def predict(self, img):
 
-        start = timer()
-        
         img = self.preprocess(img)
-        print(img.shape)
-                         
+        
+        start = timer()
+                                 
         with tf.Session() as sess:
             pred = sess.run(fetches=[self.detection_tensor], feed_dict={self.input_tensor:img})[0]
                     
@@ -69,7 +84,6 @@ class Yolo:
                         a, b = [int(x) for x in op['layers']]
                         inp = tf.concat((output_maps[a],output_maps[b]), axis=3)
                     else:
-                        print('route',i+int(op['layers']))
                         inp = output_maps[int(op['layers'])]
 
                 elif op['type'] == 'upsample':          
@@ -78,7 +92,6 @@ class Yolo:
                     inp = tf.image.resize_images(images=inp, size=[inp.shape[1]*stride, inp.shape[2]*stride], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
                 elif op['type'] == 'yolo':        
-                    print('yolo layer shape: ', inp.shape)
                     detection_map = self.add_yolo_layer(inp, op)
 
                     detections.append(detection_map)
