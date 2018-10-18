@@ -153,7 +153,7 @@ def parse_args():
 
     sys_args = {}
     
-    sys_args['img_path'] = args.imgs
+    sys_args['img_path'] = args.img
     sys_args['cfg_path'] = args.cfg
     sys_args['weights_path'] = args.weights
     sys_args['out_path'] = args.out
